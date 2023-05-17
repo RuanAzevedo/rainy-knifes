@@ -1,14 +1,21 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private float movementSpeed = 3.0f;
+    private const int LEVEL_COUNT = 10;
 
-    private int score;
+    [SerializeField]
+    private float movementSpeed = 3.0f;
+
+    [SerializeField]
+    private float maxSpawnCooldown = 0.2f;
+
+    public int score;
+    public int level = 1;
+
     private bool canMove = true;
     private readonly string horizontalAxis = "Horizontal";
     private readonly string Walk_Animation_Name = "Walk";
@@ -17,9 +24,11 @@ public class GameManager : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private Animator playerAnimator;
+    private Spawner Spawner;
 
     [SerializeField] private AudioClip ouchSound;
     [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI levelText;
     private AudioSource playerAudio;
 
     private void Awake()
@@ -28,6 +37,12 @@ public class GameManager : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         playerAnimator = GetComponent<Animator>();
         playerAudio = GetComponent<AudioSource>();
+        Spawner = FindObjectOfType<Spawner>();
+    }
+
+    void Start()
+    {
+        StartCoroutine(Spawner.SpawnKnife());
     }
 
     // Update is called once per frame
@@ -83,14 +98,6 @@ public class GameManager : MonoBehaviour
         transform.position = tempPos;
     }
 
-    IEnumerator RestartGame()
-    {
-        yield return new WaitForSecondsRealtime(3f);
-
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("Gameplay");
-    }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag(Knife_Tag))
@@ -103,9 +110,42 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void CheckScore()
+    {
+        if (score % LEVEL_COUNT == 0)
+        {
+            IncrementLevel();
+            IncrementMoveSpeed();
+        }
+    }
+
     public void IncrementScore()
     {
         score += 1;
         scoreText.text = "Score: " + score;
+    }
+
+    public void IncrementLevel()
+    {
+        level += 1;
+        levelText.text = "Level: " + level;
+
+        if(Spawner.spawnCooldown > maxSpawnCooldown)
+        {
+            Spawner.spawnCooldown -= 0.1f;
+        }
+    }
+
+    public void IncrementMoveSpeed()
+    {
+        movementSpeed += 1;
+    }
+
+    public IEnumerator RestartGame()
+    {
+        yield return new WaitForSecondsRealtime(3f);
+
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Gameplay");
     }
 }

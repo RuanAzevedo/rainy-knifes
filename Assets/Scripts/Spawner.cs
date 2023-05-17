@@ -10,25 +10,25 @@ public class Spawner : MonoBehaviour
     private float min_X = 2.5f, max_X = 2.5f;
 
     private AudioSource playerAudio;
+    public float spawnCooldown = 1f;
+
     public AudioClip fallingSfx;
 
     void Start()
     {
-        playerAudio = GetComponent<AudioSource>();
-        
-        StartCoroutine(SpawnKnife());
-        
+        playerAudio = GetComponent<AudioSource>();        
     }
 
-    IEnumerator SpawnKnife()
+    public IEnumerator SpawnKnife()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(spawnCooldown);
 
-        GameObject k = Instantiate(knife);
+        float posX = Random.Range(min_X, max_X);
+        float posY = transform.position.y;
 
-        float x = Random.Range(min_X, max_X);
+        GameObject newKnife = Instantiate(knife);
+        newKnife.transform.position = new Vector2(posX, posY);
 
-        k.transform.position = new Vector2(x, transform.position.y);
         playerAudio.PlayOneShot(fallingSfx, 1.0f);
 
         StartCoroutine(SpawnKnife());
